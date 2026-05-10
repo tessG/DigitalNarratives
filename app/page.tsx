@@ -6,7 +6,7 @@ import { TagFrequencyView } from './_components/TagFrequencyView'
 import { FrameShiftView } from './_components/FrameShiftView'
 import { CooccurrenceView } from './_components/CooccurrenceView'
 import { TensionPostsView } from './_components/TensionPostsView'
-import { SketchView, testSketch } from './_components/SketchView'
+import { NarrativeGraphView } from './_components/NarrativeGraphView'
 
 const events = [
     { label: 'BLM Denmark 2020', active: true },
@@ -62,7 +62,7 @@ export default function Home() {
                 <CooccurrenceView data={cooccurrence} />
                 <TensionPostsView data={tensionPosts} />
                 <div style={{ gridColumn: '1 / -1', background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <SketchView sketch={testSketch} />
+                    <NarrativeGraphView />
                 </div>
             </div>
         </main>
