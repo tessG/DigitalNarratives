@@ -1,11 +1,13 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { EVENTS, EVENT_BY_LABEL } from '../lib/events'
 import type { Post } from './types'
 
 loadEnv()
 
-const SUBREDDIT  = process.argv[2] || 'BlackLivesMatter'
-const LIMIT      = parseInt(process.argv[3] || '200')
+const EVENT_ARG = process.argv[2]
+const LIMIT     = parseInt(process.argv[3] || '200')
+
 const USER_AGENT = process.env.REDDIT_USER_AGENT || 'digitalnarratives-poc/0.1'
 
 type RedditChild = {
@@ -30,8 +32,8 @@ async function getToken(): Promise<string> {
     const res = await fetch('https://www.reddit.com/api/v1/access_token', {
         method: 'POST',
         headers: {
-            Authorization: `Basic ${credentials}`,
-            'User-Agent': USER_AGENT,
+            Authorization:  `Basic ${credentials}`,
+            'User-Agent':   USER_AGENT,
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: 'grant_type=client_credentials',
@@ -41,10 +43,10 @@ async function getToken(): Promise<string> {
     return data.access_token
 }
 
-async function fetchBatch(token: string, after: string | null): Promise<{ children: RedditChild[]; after: string | null }> {
+async function fetchBatch(token: string, subreddit: string, after: string | null): Promise<{ children: RedditChild[]; after: string | null }> {
     const params = new URLSearchParams({ limit: '100', t: 'year' })
     if (after) params.set('after', after)
-    const res = await fetch(`https://oauth.reddit.com/r/${SUBREDDIT}/top?${params}`, {
+    const res = await fetch(`https://oauth.reddit.com/r/${subreddit}/top?${params}`, {
         headers: { Authorization: `Bearer ${token}`, 'User-Agent': USER_AGENT },
     })
     if (!res.ok) throw new Error(`Reddit fetch failed: ${res.status} ${await res.text()}`)
@@ -53,17 +55,31 @@ async function fetchBatch(token: string, after: string | null): Promise<{ childr
 }
 
 async function main() {
+    if (!EVENT_ARG) {
+        console.error('Usage: pipeline:scrape "<event label>" [limit]')
+        console.error('Available events:')
+        EVENTS.forEach(e => console.error(`  "${e.label}"  →  r/${e.subreddit}`))
+        process.exit(1)
+    }
+
+    const eventDef = EVENT_BY_LABEL[EVENT_ARG]
+    if (!eventDef) {
+        console.error(`Unknown event "${EVENT_ARG}". Available events:`)
+        EVENTS.forEach(e => console.error(`  "${e.label}"`))
+        process.exit(1)
+    }
+
     const outDir = path.join(process.cwd(), 'pipeline', 'data')
     fs.mkdirSync(outDir, { recursive: true })
 
-    console.log(`Scraping r/${SUBREDDIT}, up to ${LIMIT} posts…`)
+    console.log(`Scraping r/${eventDef.subreddit} for "${eventDef.label}", up to ${LIMIT} posts…`)
     const token = await getToken()
 
     const posts: Post[] = []
     let after: string | null = null
 
     while (posts.length < LIMIT) {
-        const batch = await fetchBatch(token, after)
+        const batch = await fetchBatch(token, eventDef.subreddit, after)
         for (const { data: p } of batch.children) {
             const content = [p.title, p.selftext].filter(s => s?.trim()).join('\n\n').trim()
             if (!content) continue
@@ -75,6 +91,9 @@ async function main() {
                 date:      new Date(p.created_utc * 1000).toISOString().split('T')[0],
                 url:       p.url,
                 score:     p.score,
+                eventUri:  eventDef.uri,
+                language:  eventDef.language,
+                region:    eventDef.region,
             })
             if (posts.length >= LIMIT) break
         }

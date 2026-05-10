@@ -9,7 +9,8 @@
     "lint": "eslint",
     "pipeline:scrape": "tsx pipeline/scrape.ts",
     "pipeline:annotate": "tsx pipeline/annotate.ts",
-    "pipeline:ingest": "tsx pipeline/ingest.ts"
+    "pipeline:ingest": "tsx pipeline/ingest.ts",
+    "pipeline:retrofit": "tsx pipeline/retrofit.ts"
   },
   "dependencies": {
     "next": "16.2.4",

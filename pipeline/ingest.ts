@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { EVENT_BY_URI } from '../lib/events'
 import type { AnnotatedPost } from './types'
 
 loadEnv()
@@ -7,6 +8,7 @@ loadEnv()
 const ANNOTATED_PATH = path.join(process.cwd(), 'pipeline', 'data', 'annotated.json')
 const POST_BASE      = 'http://narratives.poc/post/'
 const ANN_BASE       = 'http://narratives.poc/annotation/'
+const EVENT_BASE     = 'http://narratives.poc/event/'
 const NAR            = 'http://narratives.poc/ontology#'
 const BATCH_SIZE     = 20
 
@@ -14,8 +16,18 @@ function sparqlEscape(s: string): string {
     return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r')
 }
 
-function buildInsert(posts: AnnotatedPost[]): string {
+function buildInsert(posts: AnnotatedPost[], eventUris: Set<string>): string {
     const triples: string[] = []
+
+    // Event nodes (one per unique event in this batch)
+    for (const uri of eventUris) {
+        const def = EVENT_BY_URI[uri]
+        if (!def) continue
+        triples.push(
+            `<${uri}> a <${NAR}Event> ;`,
+            `  <http://www.w3.org/2000/01/rdf-schema#label> "${def.label}" .`,
+        )
+    }
 
     for (const post of posts) {
         const postUri = `<${POST_BASE}${post.id}>`
@@ -23,7 +35,10 @@ function buildInsert(posts: AnnotatedPost[]): string {
             `${postUri} a <${NAR}Post> ;`,
             `  <${NAR}content>  "${sparqlEscape(post.content)}" ;`,
             `  <${NAR}date>     "${post.date}" ;`,
-            `  <${NAR}platform> "${post.platform}" .`,
+            `  <${NAR}platform> "${post.platform}" ;`,
+            `  <${NAR}language> "${post.language}" ;`,
+            `  <${NAR}region>   "${post.region}" ;`,
+            `  <${NAR}event>    <${post.eventUri}> .`,
         )
 
         post.tags.forEach((tagUri, i) => {
@@ -60,7 +75,8 @@ async function main() {
 
     for (let i = 0; i < withTags.length; i += BATCH_SIZE) {
         const batch = withTags.slice(i, i + BATCH_SIZE)
-        const update = buildInsert(batch)
+        const eventUris = new Set(batch.map(p => p.eventUri))
+        const update = buildInsert(batch, eventUris)
         await sparqlUpdate(update)
         process.stdout.write(`\r  ${Math.min(i + BATCH_SIZE, withTags.length)}/${withTags.length} ingested…`)
     }

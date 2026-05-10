@@ -7,12 +7,7 @@ import { FrameShiftView } from './_components/FrameShiftView'
 import { CooccurrenceView } from './_components/CooccurrenceView'
 import { TensionPostsView } from './_components/TensionPostsView'
 import { NarrativeGraphView } from './_components/NarrativeGraphView'
-
-const events = [
-    { label: 'BLM Denmark 2020', active: true },
-    { label: 'Gaza 2024', active: false },
-    { label: 'Ukraine 2022', active: false },
-]
+import { EVENTS, EVENT_BY_LABEL } from '../lib/events'
 
 export default function Home() {
     const [tagFrequency, setTagFrequency] = useState<TagFrequencyItem[]>([])
@@ -22,11 +17,13 @@ export default function Home() {
     const [selectedEvent, setSelectedEvent] = useState('BLM Denmark 2020')
 
     useEffect(() => {
-        fetch('/api/tag-frequency').then(r => r.json()).then(setTagFrequency)
-        fetch('/api/cooccurrence').then(r => r.json()).then(setCooccurrence)
-        fetch('/api/temporal-arc').then(r => r.json()).then(setTemporalArc)
-        fetch('/api/tension-posts').then(r => r.json()).then(setTensionPosts)
-    }, [])
+        const eventUri = EVENT_BY_LABEL[selectedEvent]?.uri ?? ''
+        const q = eventUri ? `?event=${encodeURIComponent(eventUri)}` : ''
+        fetch(`/api/tag-frequency${q}`).then(r => r.json()).then(setTagFrequency)
+        fetch(`/api/cooccurrence${q}`).then(r => r.json()).then(setCooccurrence)
+        fetch(`/api/temporal-arc${q}`).then(r => r.json()).then(setTemporalArc)
+        fetch(`/api/tension-posts${q}`).then(r => r.json()).then(setTensionPosts)
+    }, [selectedEvent])
 
     return (
         <main style={{ padding: '1.5rem', background: 'var(--color-background-tertiary)', minHeight: '100vh' }}>
@@ -35,30 +32,30 @@ export default function Home() {
                 <span style={{ fontSize: '18px', fontWeight: 500 }}>Narrative fingerprint</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Event</span>
-                    {events.map(e => (
+                    {EVENTS.map(e => (
                         <span
                             key={e.label}
-                            onClick={() => e.active && setSelectedEvent(e.label)}
+                            onClick={() => setSelectedEvent(e.label)}
                             style={{
                                 fontSize: '13px',
                                 fontWeight: e.label === selectedEvent ? 500 : 400,
                                 padding: '4px 12px',
                                 borderRadius: '20px',
-                                cursor: e.active ? 'pointer' : 'default',
+                                cursor: 'pointer',
                                 background: e.label === selectedEvent ? 'var(--color-event-active-bg)' : 'var(--color-background-secondary)',
                                 color: e.label === selectedEvent ? 'var(--color-event-active-text)' : 'var(--color-text-tertiary)',
                                 border: '0.5px solid var(--color-border-tertiary)',
                             }}
                         >
-              {e.label}
-            </span>
+                            {e.label}
+                        </span>
                     ))}
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div style={{ gridColumn: '1 / -1', background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <NarrativeGraphView />
+                    <NarrativeGraphView eventUri={EVENT_BY_LABEL[selectedEvent]?.uri} />
                 </div>
                 <TagFrequencyView data={tagFrequency} />
                 <FrameShiftView data={temporalArc} />
