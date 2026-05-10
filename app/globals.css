@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Palette: green #33E08E | pink #FF88FA | red #FD5061 | yellow #FFEC4B */
 :root {
   /* structure */
   --color-background-tertiary:  #000000;
@@ -9,24 +10,16 @@
   --color-text-primary:         #ffffff;
   --color-text-secondary:       #b9c1cf;
   --color-text-tertiary:        #4b4f63;
-
-  /* accent palette */
-  --color-accent-a:  #33E08E;
-  --color-accent-b:  #FF88FA;
-  --color-accent-c:  #FD5061;
-  --color-accent-d:  #FFEC4B;
-  --color-on-accent: #000000;
-
-  /* semantic roles */
-  --color-bar-primary:        var(--color-accent-b);
-  --color-bar-secondary:      var(--color-accent-a);
-  --color-tag-a-bg:           var(--color-accent-a);
-  --color-tag-b-bg:           var(--color-accent-c);
-  --color-tag-text:           var(--color-on-accent);
-  --color-badge-bg:           var(--color-accent-d);
-  --color-badge-text:         var(--color-on-accent);
-  --color-event-active-bg:    var(--color-accent-b);
-  --color-event-active-text:  var(--color-on-accent);
+  /* design tokens */
+  --color-bar-primary:          #FF88FA;
+  --color-bar-secondary:        #33E08E;
+  --color-tag-a-bg:             #33E08E;
+  --color-tag-b-bg:             #FD5061;
+  --color-tag-text:             #000000;
+  --color-badge-bg:             #FFEC4B;
+  --color-badge-text:           #000000;
+  --color-event-active-bg:      #FF88FA;
+  --color-event-active-text:    #000000;
 }
 
 @theme inline {
