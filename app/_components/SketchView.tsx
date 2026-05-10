@@ -45,12 +45,16 @@ export function SketchView({ sketch }: { sketch: Sketch }) {
 
     useEffect(() => {
         if (!containerRef.current) return
-        let instance: p5
+        let instance: p5 | undefined
+        let cancelled = false
         import('p5').then(({ default: P5 }) => {
-            if (!containerRef.current) return
+            if (cancelled || !containerRef.current) return
             instance = new P5(sketchRef.current, containerRef.current)
         })
-        return () => { instance?.remove() }
+        return () => {
+            cancelled = true
+            instance?.remove()
+        }
     }, [])
 
     return <div ref={containerRef} />

@@ -42,9 +42,10 @@ function narrativeGraphSketch(data: GraphData): Sketch {
     return (p: p5) => {
         let nodes: PhysicsNode[] = []
         let nodeMap = new Map<string, PhysicsNode>()
+        let maxCount = 1
 
         p.setup = () => {
-            p.createCanvas(p.windowWidth - 48, 480)
+            p.createCanvas(p.windowWidth - 48, 520)
 
             const cx = p.width / 2
             const cy = p.height / 2
@@ -54,27 +55,26 @@ function narrativeGraphSketch(data: GraphData): Sketch {
 
             abstracts.forEach((n, i) => {
                 const angle = (i / abstracts.length) * Math.PI * 2 - Math.PI / 2
-                const ring  = Math.min(p.width, p.height) * 0.28
                 map.set(n.uri, {
                     ...n,
-                    x: cx + Math.cos(angle) * ring,
-                    y: cy + Math.sin(angle) * ring,
+                    x: cx + Math.cos(angle) * 50,
+                    y: cy + Math.sin(angle) * 50,
                     vx: 0, vy: 0,
                     r: 38,
                     color: CLASS_COLORS[n.uri] ?? '#888',
                 })
             })
 
-            theories.forEach(n => {
-                const parent = map.get(n.parent!)
-                const angle  = p.random(Math.PI * 2)
-                const dist   = 70 + p.random(40)
+            maxCount = Math.max(1, ...theories.map(n => n.count))
+            theories.forEach((n, i) => {
+                const angle = (i / theories.length) * Math.PI * 2 - Math.PI / 2
+                const ring  = p.lerp(80, 240, 1 - n.count / maxCount)
                 map.set(n.uri, {
                     ...n,
-                    x: (parent?.x ?? cx) + Math.cos(angle) * dist,
-                    y: (parent?.y ?? cy) + Math.sin(angle) * dist,
+                    x: cx + Math.cos(angle) * ring,
+                    y: cy + Math.sin(angle) * ring,
                     vx: 0, vy: 0,
-                    r: Math.max(10, 8 + Math.sqrt(n.count) * 3),
+                    r: Math.max(6, 3 + n.count * 2.5),
                     color: CLASS_COLORS[n.parent ?? ''] ?? '#888',
                 })
             })
@@ -83,7 +83,7 @@ function narrativeGraphSketch(data: GraphData): Sketch {
             nodeMap = map
         }
 
-        p.windowResized = () => p.resizeCanvas(p.windowWidth - 48, 480)
+        p.windowResized = () => p.resizeCanvas(p.windowWidth - 48, 520)
 
         p.draw = () => {
             p.background(13)
@@ -111,7 +111,7 @@ function narrativeGraphSketch(data: GraphData): Sketch {
                 if (!a || !b) continue
                 const dx   = b.x - a.x, dy = b.y - a.y
                 const d    = Math.max(Math.hypot(dx, dy), 1)
-                const rest = edge.type === 'hierarchy' ? 140 : 200
+                const rest = edge.type === 'hierarchy' ? 220 : 200
                 const k    = edge.type === 'hierarchy'
                     ? 0.05
                     : 0.012 * Math.min(edge.weight, 8)
@@ -121,17 +121,20 @@ function narrativeGraphSketch(data: GraphData): Sketch {
                 b.vx -= nx * f; b.vy -= ny * f
             }
 
-            // Centering gravity
+            // Abstract nodes to center; heavy theory nodes pulled in, light ones pushed out
             for (const n of nodes) {
-                n.vx += (cx - n.x) * 0.002
-                n.vy += (cy - n.y) * 0.002
+                const g = n.parent === null
+                    ? 0.015
+                    : p.map(n.count, 0, maxCount, -0.002, 0.006)
+                n.vx += (cx - n.x) * g
+                n.vy += (cy - n.y) * g
             }
 
             // Damping and position update
             for (const n of nodes) {
                 n.vx *= 0.86; n.vy *= 0.86
                 n.x = p.constrain(n.x + n.vx, n.r + 4, p.width  - n.r - 4)
-                n.y = p.constrain(n.y + n.vy, n.r + 4, p.height - n.r - 4)
+                n.y = p.constrain(n.y + n.vy, n.r + 4, p.height - n.r - 24)
             }
 
             // Hierarchy edges
@@ -194,7 +197,7 @@ export function NarrativeGraphView() {
     )
 
     if (!sketch) return (
-        <div style={{ height: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontSize: '13px' }}>
+        <div style={{ height: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontSize: '13px' }}>
             Loading…
         </div>
     )

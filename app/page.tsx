@@ -57,13 +57,13 @@ export default function Home() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ gridColumn: '1 / -1', background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: '12px', overflow: 'hidden' }}>
+                    <NarrativeGraphView />
+                </div>
                 <TagFrequencyView data={tagFrequency} />
                 <FrameShiftView data={temporalArc} />
                 <CooccurrenceView data={cooccurrence} />
                 <TensionPostsView data={tensionPosts} />
-                <div style={{ gridColumn: '1 / -1', background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <NarrativeGraphView />
-                </div>
             </div>
         </main>
     )
