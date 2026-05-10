@@ -15,7 +15,7 @@ export function TensionPostsView({ data }: { data: TensionPost[] }) {
                     <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>{post.platform} · {formatFullDate(post.date)}</div>
                     <div style={{ fontSize: '13px', lineHeight: 1.5 }}>{post.content.slice(0, 120)}...</div>
                     <div style={{ marginTop: '6px' }}>
-                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', background: '#FAEEDA', color: '#854F0B' }}>contradictory</span>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', background: 'var(--color-badge-bg)', color: 'var(--color-badge-text)' }}>contradictory</span>
                     </div>
                 </div>
             ))}

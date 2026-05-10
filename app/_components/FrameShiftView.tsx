@@ -19,8 +19,8 @@ export function FrameShiftView({ data }: { data: TemporalItem[] }) {
                     return (
                         <div key={date} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', flex: 1 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', width: '100%', gap: '2px' }}>
-                                {individual > 0 && <div style={{ height: `${(individual / maxTemporalCount) * 80}px`, background: '#CECBF6', borderRadius: '2px' }}></div>}
-                                {systemic > 0 && <div style={{ height: `${(systemic / maxTemporalCount) * 80}px`, background: '#9FE1CB', borderRadius: '2px' }}></div>}
+                                {individual > 0 && <div style={{ height: `${(individual / maxTemporalCount) * 80}px`, background: 'var(--color-bar-primary)', borderRadius: '2px' }}></div>}
+                                {systemic > 0 && <div style={{ height: `${(systemic / maxTemporalCount) * 80}px`, background: 'var(--color-bar-secondary)', borderRadius: '2px' }}></div>}
                             </div>
                             <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', textAlign: 'center' }}>{formatDate(date)}</div>
                         </div>
@@ -28,8 +28,8 @@ export function FrameShiftView({ data }: { data: TemporalItem[] }) {
                 })}
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#CECBF6' }}></div><span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Individual cause</span></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#9FE1CB' }}></div><span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Systemic cause</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '2px', background: 'var(--color-bar-primary)' }}></div><span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Individual cause</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '2px', background: 'var(--color-bar-secondary)' }}></div><span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Systemic cause</span></div>
             </div>
         </div>
     )

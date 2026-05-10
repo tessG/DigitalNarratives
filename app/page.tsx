@@ -44,8 +44,8 @@ export default function Home() {
                                 padding: '4px 12px',
                                 borderRadius: '20px',
                                 cursor: e.active ? 'pointer' : 'default',
-                                background: e.label === selectedEvent ? '#CECBF6' : 'var(--color-background-secondary)',
-                                color: e.label === selectedEvent ? '#3C3489' : 'var(--color-text-tertiary)',
+                                background: e.label === selectedEvent ? 'var(--color-event-active-bg)' : 'var(--color-background-secondary)',
+                                color: e.label === selectedEvent ? 'var(--color-event-active-text)' : 'var(--color-text-tertiary)',
                                 border: '0.5px solid var(--color-border-tertiary)',
                             }}
                         >
