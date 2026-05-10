@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# pipeline intermediate data (potentially large, not for version control)
+pipeline/data/*.json
