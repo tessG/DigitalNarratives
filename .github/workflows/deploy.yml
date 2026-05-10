@@ -15,8 +15,8 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            cd /var/www/digitalnarratives
+            cd /var/www/narrativefingerprint
             git pull origin main
             npm ci --omit=dev
             npm run build
-            pm2 restart digitalnarratives
+            pm2 restart narrativefingerprint

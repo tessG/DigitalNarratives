@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Narratives",
+  title: "Narrative Fingerprint",
   description: "Narrative fingerprint dashboard",
 };
 

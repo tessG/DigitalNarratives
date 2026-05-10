@@ -188,8 +188,11 @@ export function NarrativeGraphView({ eventUri }: { eventUri?: string }) {
     const [graphData, setGraphData] = useState<GraphData | null>(null)
 
     useEffect(() => {
+        setGraphData(null)
         const q = eventUri ? `?event=${encodeURIComponent(eventUri)}` : ''
-        fetch(`/api/narrative-graph${q}`).then(r => r.json()).then(setGraphData)
+        fetch(`/api/narrative-graph${q}`)
+            .then(r => r.json())
+            .then(data => { if (Array.isArray(data?.nodes)) setGraphData(data) })
     }, [eventUri])
 
     const sketch = useMemo(
