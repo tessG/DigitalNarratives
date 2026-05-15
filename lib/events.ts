@@ -4,6 +4,8 @@ export type EventDef = {
     subreddit: string
     language:  string
     region:    string
+    dateFrom:  string  // YYYY-MM-DD
+    dateTo:    string  // YYYY-MM-DD
 }
 
 export const EVENTS: EventDef[] = [
@@ -13,6 +15,8 @@ export const EVENTS: EventDef[] = [
         subreddit: 'BlackLivesMatter',
         language:  'en',
         region:    'DK',
+        dateFrom:  '2020-05-25',
+        dateTo:    '2021-01-01',
     },
     {
         uri:       'http://narratives.poc/event/gaza-2024',
@@ -20,6 +24,8 @@ export const EVENTS: EventDef[] = [
         subreddit: 'IsraelPalestine',
         language:  'en',
         region:    'GLOBAL',
+        dateFrom:  '2023-10-07',
+        dateTo:    '2025-01-01',
     },
     {
         uri:       'http://narratives.poc/event/ukraine-2022',
@@ -27,6 +33,17 @@ export const EVENTS: EventDef[] = [
         subreddit: 'ukraine',
         language:  'en',
         region:    'GLOBAL',
+        dateFrom:  '2022-02-24',
+        dateTo:    '2023-01-01',
+    },
+    {
+        uri:       'http://narratives.poc/event/Greenland',
+        label:     'Greenland',
+        subreddit: 'greenland',
+        language:  'en',
+        region:    'GLOBAL',
+        dateFrom:  '2025-01-01',
+        dateTo:    '2025-03-01',
     },
 ]
 

@@ -8,50 +8,31 @@ loadEnv()
 const EVENT_ARG = process.argv[2]
 const LIMIT     = parseInt(process.argv[3] || '200')
 
-const USER_AGENT = process.env.REDDIT_USER_AGENT || 'digitalnarratives-poc/0.1'
+const ARCTIC_SHIFT_URL = 'https://arctic-shift.photon-reddit.com/api/posts/search'
 
-type RedditChild = {
-    data: {
-        id: string
-        title: string
-        selftext: string
-        author: string
-        created_utc: number
-        subreddit: string
-        url: string
-        score: number
-    }
+type ArcticPost = {
+    id:          string
+    title:       string
+    selftext:    string
+    author:      string
+    created_utc: number
+    subreddit:   string
+    url:         string
+    score:       number
 }
 
-async function getToken(): Promise<string> {
-    const { REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET } = process.env
-    if (!REDDIT_CLIENT_ID || !REDDIT_CLIENT_SECRET) {
-        throw new Error('Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET in .env.local')
-    }
-    const credentials = Buffer.from(`${REDDIT_CLIENT_ID}:${REDDIT_CLIENT_SECRET}`).toString('base64')
-    const res = await fetch('https://www.reddit.com/api/v1/access_token', {
-        method: 'POST',
-        headers: {
-            Authorization:  `Basic ${credentials}`,
-            'User-Agent':   USER_AGENT,
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials',
+async function fetchBatch(subreddit: string, after: number, before: number): Promise<ArcticPost[]> {
+    const params = new URLSearchParams({
+        subreddit,
+        limit:  '100',
+        after:  String(after),
+        before: String(before),
+        sort:   'asc',
     })
-    if (!res.ok) throw new Error(`Reddit auth failed: ${res.status} ${await res.text()}`)
-    const data = await res.json() as { access_token: string }
-    return data.access_token
-}
-
-async function fetchBatch(token: string, subreddit: string, after: string | null): Promise<{ children: RedditChild[]; after: string | null }> {
-    const params = new URLSearchParams({ limit: '100', t: 'year' })
-    if (after) params.set('after', after)
-    const res = await fetch(`https://oauth.reddit.com/r/${subreddit}/top?${params}`, {
-        headers: { Authorization: `Bearer ${token}`, 'User-Agent': USER_AGENT },
-    })
-    if (!res.ok) throw new Error(`Reddit fetch failed: ${res.status} ${await res.text()}`)
-    const data = await res.json() as { data: { children: RedditChild[]; after: string | null } }
-    return data.data
+    const res = await fetch(`${ARCTIC_SHIFT_URL}?${params}`)
+    if (!res.ok) throw new Error(`Arctic Shift fetch failed: ${res.status} ${await res.text()}`)
+    const data = await res.json() as { data: ArcticPost[] }
+    return data.data ?? []
 }
 
 async function main() {
@@ -72,20 +53,35 @@ async function main() {
     const outDir = path.join(process.cwd(), 'pipeline', 'data')
     fs.mkdirSync(outDir, { recursive: true })
 
-    console.log(`Scraping r/${eventDef.subreddit} for "${eventDef.label}", up to ${LIMIT} posts…`)
-    const token = await getToken()
+    const afterTs  = Math.floor(new Date(eventDef.dateFrom).getTime() / 1000)
+    const beforeTs = Math.floor(new Date(eventDef.dateTo).getTime() / 1000)
 
-    const posts: Post[] = []
-    let after: string | null = null
+    console.log(`Scraping r/${eventDef.subreddit} for "${eventDef.label}" (${eventDef.dateFrom} → ${eventDef.dateTo}), up to ${LIMIT} posts…`)
 
-    while (posts.length < LIMIT) {
-        const batch = await fetchBatch(token, eventDef.subreddit, after)
-        for (const { data: p } of batch.children) {
+    const allPosts: ArcticPost[] = []
+    let cursor = afterTs
+
+    while (allPosts.length < LIMIT * 3) {
+        const batch = await fetchBatch(eventDef.subreddit, cursor, beforeTs)
+        if (batch.length === 0) break
+        allPosts.push(...batch)
+        cursor = batch[batch.length - 1].created_utc + 1
+        if (cursor >= beforeTs) break
+        process.stdout.write(`\r  ${allPosts.length} posts collected…`)
+        await new Promise(r => setTimeout(r, 500))
+    }
+
+    // sort by score descending, take top LIMIT
+    allPosts.sort((a, b) => b.score - a.score)
+    const top = allPosts.slice(0, LIMIT)
+
+    const posts: Post[] = top
+        .map(p => {
             const content = [p.title, p.selftext].filter(s => s?.trim()).join('\n\n').trim()
-            if (!content) continue
-            posts.push({
+            if (!content) return null
+            return {
                 id:        `reddit_${p.id}`,
-                platform:  'reddit',
+                platform:  'reddit' as const,
                 subreddit: p.subreddit,
                 content,
                 date:      new Date(p.created_utc * 1000).toISOString().split('T')[0],
@@ -94,14 +90,9 @@ async function main() {
                 eventUri:  eventDef.uri,
                 language:  eventDef.language,
                 region:    eventDef.region,
-            })
-            if (posts.length >= LIMIT) break
-        }
-        after = batch.after
-        if (!after || batch.children.length === 0) break
-        await new Promise(r => setTimeout(r, 1000))
-        process.stdout.write(`\r  ${posts.length} posts fetched…`)
-    }
+            }
+        })
+        .filter((p): p is Post => p !== null)
 
     const outPath = path.join(outDir, 'posts.json')
     fs.writeFileSync(outPath, JSON.stringify(posts, null, 2))
