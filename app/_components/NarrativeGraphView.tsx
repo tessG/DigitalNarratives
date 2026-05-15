@@ -160,24 +160,53 @@ function narrativeGraphSketch(data: GraphData): Sketch {
             }
 
             // Nodes
-            p.noStroke()
             for (const n of nodes) {
-                p.fill(n.color)
-                p.circle(n.x, n.y, n.r * 2)
+                if (n.parent === null) {
+                    p.noFill()
+                    p.drawingContext.setLineDash([4, 4])
+                    p.stroke(n.color)
+                    p.strokeWeight(1.5)
+                    p.circle(n.x, n.y, n.r * 2)
+                    p.drawingContext.setLineDash([])
+                } else {
+                    p.noStroke()
+                    p.fill(n.color)
+                    p.circle(n.x, n.y, n.r * 2)
+                }
             }
 
             // Labels
+            const drawLines = (lines: string[], x: number, y: number) => {
+                const lh = 11
+                if (lines.length === 1) { p.text(lines[0], x, y); return }
+                p.text(lines[0], x, y - lh / 2)
+                p.text(lines[1], x, y + lh / 2)
+            }
+            const splitLabel = (label: string, available: number): string[] => {
+                const words = label.split(' ')
+                if (words.length === 1 || p.textWidth(label) <= available) return [label]
+                const mid = Math.ceil(words.length / 2)
+                return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')]
+            }
+
             for (const n of nodes) {
+                const available = n.r * 2 - 10
                 if (n.parent === null) {
-                    p.fill(0)
+                    p.fill(n.color)
                     p.textSize(10)
                     p.textAlign(p.CENTER, p.CENTER)
-                    p.text(n.label, n.x, n.y)
+                    drawLines(splitLabel(n.label, available), n.x, n.y)
+                } else if (n.r >= 20) {
+                    p.fill(0)
+                    p.textSize(9)
+                    p.textAlign(p.CENTER, p.CENTER)
+                    drawLines(splitLabel(n.label, available), n.x, n.y)
                 } else {
                     p.fill(255, 255, 255, 210)
                     p.textSize(9)
                     p.textAlign(p.CENTER, p.TOP)
-                    p.text(n.label, n.x, n.y + n.r + 4)
+                    const lines = splitLabel(n.label, available)
+                    lines.forEach((line, i) => p.text(line, n.x, n.y + n.r + 4 + i * 11))
                 }
             }
         }
