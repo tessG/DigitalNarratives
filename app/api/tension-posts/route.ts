@@ -1,12 +1,15 @@
 import { sparqlQuery } from '@/lib/sparql'
 
 type Binding = {
-    content: { value: string }
-    date: { value: string }
+    content:  { value: string }
+    date:     { value: string }
     platform: { value: string }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+    const eventUri    = new URL(request.url).searchParams.get('event') ?? ''
+    const eventFilter = eventUri ? `?post nar:event <${eventUri}> .` : ''
+
     try {
         const bindings = await sparqlQuery(`
             PREFIX nar: <http://narratives.poc/ontology#>
@@ -22,16 +25,17 @@ export async function GET() {
                 ?ann1 nar:post ?post ; nar:tag nar:Hero .
                 ?ann2 nar:post ?post ; nar:tag nar:Villain .
               }
-              ?post nar:content ?content ;
-                    nar:date ?date ;
+              ?post nar:content  ?content ;
+                    nar:date     ?date ;
                     nar:platform ?platform .
+              ${eventFilter}
             }
             ORDER BY ?date
         `)
         const results = bindings.map((b: Binding) => ({
-            content: b.content.value,
-            date: b.date.value,
-            platform: b.platform.value
+            content:  b.content.value,
+            date:     b.date.value,
+            platform: b.platform.value,
         }))
         return Response.json(results)
     } catch (e) {

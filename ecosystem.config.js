@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'digitalnarratives',
+    name: 'narrativefingerprint',
     script: 'npm',
     args: 'start',
     env: {
