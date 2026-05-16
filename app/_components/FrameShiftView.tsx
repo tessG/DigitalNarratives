@@ -14,7 +14,7 @@ const plotH = H - PAD.top - PAD.bottom
 
 export function FrameShiftView({ data }: { data: TemporalItem[] }) {
     const dates    = [...new Set(data.map(i => i.date))].sort()
-    const maxCount = Math.max(...data.map(i => i.count), 1)
+    const maxCount = data.length > 0 ? Math.max(...data.map(i => i.count)) : 1
 
     const x = (i: number) => PAD.left + (dates.length < 2 ? plotW / 2 : (i / (dates.length - 1)) * plotW)
     const y = (count: number) => PAD.top + plotH - (count / maxCount) * plotH
