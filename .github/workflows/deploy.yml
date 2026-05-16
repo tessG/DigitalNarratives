@@ -8,7 +8,28 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to droplet
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy build to droplet
+        run: |
+          echo "${{ secrets.DROPLET_SSH_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          rsync -az --delete \
+            -e "ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no" \
+            .next/ ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }}:/var/www/narrativefingerprint/.next/
+          rm -f /tmp/deploy_key
+
+      - name: Update source and restart
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DROPLET_HOST }}
@@ -17,6 +38,5 @@ jobs:
           script: |
             cd /var/www/narrativefingerprint
             git pull origin main
-            npm ci
-            npm run build
+            npm ci --omit=dev
             pm2 restart all
