@@ -2,7 +2,7 @@ import type { TagFrequencyItem } from '../types'
 import { cell, cellHeader } from './cellStyles'
 
 export function TagFrequencyView({ data }: { data: TagFrequencyItem[] }) {
-    const maxCount = Math.max(...data.map(i => i.count), 1)
+    const maxCount = data.length > 0 ? Math.max(...data.map(i => i.count)) : 1
     return (
         <div style={{ ...cell, padding: '1rem 1.25rem' }}>
             <div style={cellHeader}>Tag frequency</div>
