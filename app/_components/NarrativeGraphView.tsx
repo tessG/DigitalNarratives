@@ -67,14 +67,15 @@ function narrativeGraphSketch(data: GraphData): Sketch {
 
             maxCount = Math.max(1, ...theories.map(n => n.count))
             theories.forEach((n, i) => {
-                const angle = (i / theories.length) * Math.PI * 2 - Math.PI / 2
-                const ring  = p.lerp(80, 240, 1 - n.count / maxCount)
+                const angle   = (i / theories.length) * Math.PI * 2 - Math.PI / 2
+                const ring    = p.lerp(80, 240, 1 - n.count / maxCount)
+                const sqrtR   = Math.sqrt(n.count) / Math.sqrt(maxCount)
                 map.set(n.uri, {
                     ...n,
                     x: cx + Math.cos(angle) * ring,
                     y: cy + Math.sin(angle) * ring,
                     vx: 0, vy: 0,
-                    r: Math.max(6, 3 + n.count * 2.5),
+                    r: Math.max(6, p.lerp(8, 55, sqrtR)),
                     color: CLASS_COLORS[n.parent ?? ''] ?? '#888',
                 })
             })
@@ -235,5 +236,22 @@ export function NarrativeGraphView({ eventUri }: { eventUri?: string }) {
         </div>
     )
 
-    return <SketchView sketch={sketch} />
+    return (
+        <div>
+            <SketchView sketch={sketch} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '10px 16px 12px', borderTop: '0.5px solid var(--color-border-tertiary)', fontSize: '11px', color: 'var(--color-text-tertiary)' }}>
+                <span><strong style={{ color: 'var(--color-text-secondary)' }}>Size</strong> — tag frequency</span>
+                <span><strong style={{ color: 'var(--color-text-secondary)' }}>Distance from center</strong> — inverse frequency (frequent tags move inward)</span>
+                <span><strong style={{ color: 'var(--color-text-secondary)' }}>Line thickness</strong> — co-occurrence strength</span>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {Object.entries(CLASS_COLORS).map(([uri, color]) => (
+                        <span key={uri} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: color }} />
+                            {uri.split('#')[1].replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 }
