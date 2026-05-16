@@ -163,11 +163,11 @@ function narrativeGraphSketch(data: GraphData): Sketch {
             for (const n of nodes) {
                 if (n.parent === null) {
                     p.noFill()
-                    p.drawingContext.setLineDash([4, 4])
+                    ;(p.drawingContext as CanvasRenderingContext2D).setLineDash([4, 4])
                     p.stroke(n.color)
                     p.strokeWeight(1.5)
                     p.circle(n.x, n.y, n.r * 2)
-                    p.drawingContext.setLineDash([])
+                    ;(p.drawingContext as CanvasRenderingContext2D).setLineDash([])
                 } else {
                     p.noStroke()
                     p.fill(n.color)
