@@ -40,8 +40,6 @@ export const testSketch: Sketch = (p) => {
 
 export function SketchView({ sketch }: { sketch: Sketch }) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const sketchRef = useRef<Sketch>(sketch)
-    sketchRef.current = sketch
 
     useEffect(() => {
         if (!containerRef.current) return
@@ -49,13 +47,13 @@ export function SketchView({ sketch }: { sketch: Sketch }) {
         let cancelled = false
         import('p5').then(({ default: P5 }) => {
             if (cancelled || !containerRef.current) return
-            instance = new P5(sketchRef.current, containerRef.current)
+            instance = new P5(sketch, containerRef.current)
         })
         return () => {
             cancelled = true
             instance?.remove()
         }
-    }, [])
+    }, [sketch])
 
     return <div ref={containerRef} />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TagFrequencyItem, CooccurrenceItem, TemporalItem, TensionPost } from './types'
 import { TagFrequencyView } from './_components/TagFrequencyView'
 import { FrameShiftView } from './_components/FrameShiftView'
@@ -9,20 +9,46 @@ import { TensionPostsView } from './_components/TensionPostsView'
 import { NarrativeGraphView } from './_components/NarrativeGraphView'
 import { EVENTS, EVENT_BY_LABEL } from '../lib/events'
 
+type Cache = {
+    tagFrequency: TagFrequencyItem[]
+    cooccurrence: CooccurrenceItem[]
+    temporalArc:  TemporalItem[]
+    tensionPosts: TensionPost[]
+}
+
 export default function Home() {
     const [tagFrequency, setTagFrequency] = useState<TagFrequencyItem[]>([])
     const [cooccurrence, setCooccurrence] = useState<CooccurrenceItem[]>([])
-    const [temporalArc, setTemporalArc] = useState<TemporalItem[]>([])
+    const [temporalArc, setTemporalArc]   = useState<TemporalItem[]>([])
     const [tensionPosts, setTensionPosts] = useState<TensionPost[]>([])
     const [selectedEvent, setSelectedEvent] = useState('BLM Denmark 2020')
+    const cache = useRef<Map<string, Cache>>(new Map())
 
     useEffect(() => {
         const eventUri = EVENT_BY_LABEL[selectedEvent]?.uri ?? ''
         const q = eventUri ? `?event=${encodeURIComponent(eventUri)}` : ''
-        fetch(`/api/tag-frequency${q}`).then(r => r.json()).then(setTagFrequency)
-        fetch(`/api/cooccurrence${q}`).then(r => r.json()).then(setCooccurrence)
-        fetch(`/api/temporal-arc${q}`).then(r => r.json()).then(setTemporalArc)
-        fetch(`/api/tension-posts${q}`).then(r => r.json()).then(setTensionPosts)
+
+        if (cache.current.has(eventUri)) {
+            const hit = cache.current.get(eventUri)!
+            setTagFrequency(hit.tagFrequency)
+            setCooccurrence(hit.cooccurrence)
+            setTemporalArc(hit.temporalArc)
+            setTensionPosts(hit.tensionPosts)
+            return
+        }
+
+        Promise.all([
+            fetch(`/api/tag-frequency${q}`).then(r => r.json()),
+            fetch(`/api/cooccurrence${q}`).then(r => r.json()),
+            fetch(`/api/temporal-arc${q}`).then(r => r.json()),
+            fetch(`/api/tension-posts${q}`).then(r => r.json()),
+        ]).then(([tf, co, ta, tp]) => {
+            cache.current.set(eventUri, { tagFrequency: tf, cooccurrence: co, temporalArc: ta, tensionPosts: tp })
+            setTagFrequency(tf)
+            setCooccurrence(co)
+            setTemporalArc(ta)
+            setTensionPosts(tp)
+        })
     }, [selectedEvent])
 
     return (

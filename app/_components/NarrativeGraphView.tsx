@@ -214,15 +214,27 @@ function narrativeGraphSketch(data: GraphData): Sketch {
     }
 }
 
+const graphCache = new Map<string, GraphData>()
+
 export function NarrativeGraphView({ eventUri }: { eventUri?: string }) {
     const [graphData, setGraphData] = useState<GraphData | null>(null)
 
     useEffect(() => {
+        const key = eventUri ?? ''
+        if (graphCache.has(key)) {
+            setGraphData(graphCache.get(key)!)
+            return
+        }
         setGraphData(null)
         const q = eventUri ? `?event=${encodeURIComponent(eventUri)}` : ''
         fetch(`/api/narrative-graph${q}`)
             .then(r => r.json())
-            .then(data => { if (Array.isArray(data?.nodes)) setGraphData(data) })
+            .then(data => {
+                if (Array.isArray(data?.nodes)) {
+                    graphCache.set(key, data)
+                    setGraphData(data)
+                }
+            })
     }, [eventUri])
 
     const sketch = useMemo(
