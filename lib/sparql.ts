@@ -1,4 +1,4 @@
-export async function sparqlQuery(query: string, retries = 3): Promise<unknown[]> {
+export async function sparqlQuery(query: string, retries = 3): Promise<any[]> {
     const url = `${process.env.GRAPHDB_URL}/repositories/${process.env.GRAPHDB_REPO}`
     let lastError: Error | null = null
 
